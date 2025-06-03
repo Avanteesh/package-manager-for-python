@@ -16,6 +16,8 @@ class ExtendedNodeVisitor(ast.NodeVisitor):
             self.visit_FunctionDef(node)
         elif isinstance(node, ast.Call):
             self.visit_Call(node)
+        elif isinstance(node, ast.ClassDef):
+            self.visit_ClassDef(node)
         self.generic_visit(node)
 
     def visit_FunctionDef(self, node):
@@ -29,6 +31,9 @@ class ExtendedNodeVisitor(ast.NodeVisitor):
         if node.func.id == "eval" and self.ignore_warning == False:
             warnings.warn(f"{col.Fore.RED}Warning at Line:{col.Fore.WHITE} {node.lineno} Do not use the 'eval'function, its prone to string injection attacks!")
 
+    def visit_ClassDef(self, node):
+        if (not (ord(node.name[0]) >= 65 and ord(node.name[0]) <= 91)) and self.ignore_warning == False:
+            warnings.warn(f"{col.Fore.RED}Warning: {col.Fore.WHITE} class names must be capital!")
 
 def analyzePySourceFiles(ignore_warning: bool=False):
     current = os.path.split(os.getcwd())[-1]
