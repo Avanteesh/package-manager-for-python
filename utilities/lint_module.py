@@ -30,7 +30,7 @@ class ExtendedNodeVisitor(ast.NodeVisitor):
             if isinstance(child_nodes, ast.Import) and self.ignore_warning == False:
                 warnings.warn(f"{col.Fore.RED}Warning at Line:{col.Fore.WHITE} {child_nodes.lineno} Don't import locally inside a function!")
             elif isinstance(child_nodes, ast.FunctionDef):
-                self.visit_FunctionDef(child_nodes)
+                self.visit_FunctionDef(child_nodes) # analyze lexical closures too!
     
     def visit_Call(self, node):
         if node.func.id == "eval" and self.ignore_warning == False:
