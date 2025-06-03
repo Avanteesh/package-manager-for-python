@@ -18,9 +18,14 @@ class ExtendedNodeVisitor(ast.NodeVisitor):
             self.visit_Call(node)
         elif isinstance(node, ast.ClassDef):
             self.visit_ClassDef(node)
+        elif isinstance(node, ast.ImportFrom):
+            self.visit_ImportFrom(node)
         self.generic_visit(node)
 
     def visit_FunctionDef(self, node):
+        for arg_types in node.args.defaults:
+            if isinstance(arg_types, ast.List) == True and self.ignore_warning == False:
+                warnings.warn(f"{col.Fore.RED}Warning at Line:{node.lineno}{col.Fore.WHITE} mutable default arguments are not allowed!")
         for child_nodes in node.body:
             if isinstance(child_nodes, ast.Import) and self.ignore_warning == False:
                 warnings.warn(f"{col.Fore.RED}Warning at Line:{col.Fore.WHITE} {child_nodes.lineno} Don't import locally inside a function!")
@@ -34,6 +39,11 @@ class ExtendedNodeVisitor(ast.NodeVisitor):
     def visit_ClassDef(self, node):
         if (not (ord(node.name[0]) >= 65 and ord(node.name[0]) <= 91)) and self.ignore_warning == False:
             warnings.warn(f"{col.Fore.RED}Warning: {col.Fore.WHITE} class names must be capital!")
+
+    def visit_ImportFrom(self, node):
+        # prevent wild card imports to avoid namespace collision!
+        if node.names[0].name == "*" and self.ignore_warning == False:
+            warnings.warn(f"{col.Fore.RED}Warning: {col.Fore.WHITE} wildcard import can lead to namespace pollution, instead import specific functions only!")
 
 def analyzePySourceFiles(ignore_warning: bool=False):
     current = os.path.split(os.getcwd())[-1]
