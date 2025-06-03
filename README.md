@@ -9,7 +9,7 @@ to analyze source code in form of abstract syntax tree which can help to prevent
 <h1>here are some tests so far: </h1>
 
 <p>initialization</p>
-<img src="/montages/init_pm.png" height="210" />
+<img src="/montages/init_pm.png" height="250" />
 
 <p>Warning for local imports inside functions</p>
 <img src="/montages/local-import-warning.png" height="210"/>
