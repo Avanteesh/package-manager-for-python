@@ -8,6 +8,8 @@ from collections import deque
 
 class ExtendedNodeVisitor(ast.NodeVisitor):
     functions_defined = {}  # static variable showing functions that are defined and used n times!
+    variables_defined = {}
+    classes_defined = {}   # user defined classes!
     def __init__(self, file_name: str, ignore_warning: bool):
         self.file_name = file_name
         self.ignore_warning = ignore_warning
@@ -45,8 +47,14 @@ class ExtendedNodeVisitor(ast.NodeVisitor):
         if node.func.id in ExtendedNodeVisitor.functions_defined:
             ExtendedNodeVisitor.functions_defined[node.func.id]["used"] = True  
             # a user def function has been used!
+        elif node.func.id in ExtendedNodeVisitor.classes_defined:
+            ExtendedNodeVisitor.classes_defined[node.func.id]["used"] = True
 
     def visit_ClassDef(self, node: ast.AST):
+        if node.name not in ExtendedNodeVisitor.classes_defined:
+            ExtendedNodeVisitor.classes_defined[node.name] = {
+              "filename": self.file_name, "lineno": node.lineno, "used": False
+            }
         if (not (ord(node.name[0]) >= 65 and ord(node.name[0]) <= 91)) and self.ignore_warning == False:
             warnings.warn(f"{col.Fore.RED}Warning: {col.Fore.WHITE} class names must be capital!")
 
@@ -75,9 +83,13 @@ def analyzePySourceFiles(ignore_warning: bool=False):
             elif os.path.isdir(content):
                 if first == "." and content == Config.DEPS_FOLDER.value:pass
                 else:queue.append(os.path.join(first, content))
-    for function_name, details in ExtendedNodeVisitor.functions_defined.items():
-        if details["used"] == False:  # if a user-defined function is not used, raise a warning!
-            warnings.warn(f"""{col.Fore.YELLOW}Warning: The function '{function_name}' has not been Used defined at: {details["filename"]} at line {details["lineno"]}{col.Fore.WHITE}""")
+    classesAndFunctions = zip(ExtendedNodeVisitor.functions_defined.items(),ExtendedNodeVisitor.classes_defined.items())
+    for (function_name, detail_f), (class_name, detail_c) in classesAndFunctions:
+        if detail_f["used"] == False:  # if a user-defined function is not used, raise a warning!
+            warnings.warn(f"""{col.Fore.YELLOW}Warning: The function '{function_name}' has not been Used defined at: {detail_f["filename"]} at line {detail_f["lineno"]}{col.Fore.WHITE}""")
+        if detail_c["used"] == False:
+            warnings.warn(f"""{col.Fore.YELLOW}Warning: The class '{class_name}' has been defined but unused! at:
+             {detail_c["filename"]} at line {detail_c["lineno"]}{col.Fore.WHITE}""")
 
 
 
